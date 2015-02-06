@@ -137,7 +137,10 @@ AMQP.prototype.log = function (level, msg, meta, callback) {
 		callback && callback(null, true);
 	}
 	else {
-		if (meta)
+		if (meta) {
+          meta.level = level;
+          meta.description = msg;
 		  publish(meta,callback) ;
+        }
 	}
 };
