@@ -3,7 +3,7 @@
  */
 
 var util = require('util');
-var URL = require('url');
+var URL  = require('url');
 var path = require('path');
 var amqp = require('amqp');
 
@@ -30,21 +30,22 @@ function assign(d,s) {
 
 /**
  * Create a logger over AMQP
- * 
+ *
  * @param options
  * 		name		String
  * 		level		String
+ * 		vhost		String
  * 		host		URL/String amqp://user@pass:host:port/exchange/[routingkey]
  * 		exchange	String
- * 		exchangeOptions	
- */ 
+ * 		exchangeOptions
+ */
 var AMQP = module.exports = winston.transports.AMQP = function (options) {
 	winston.Transport.call(this, options);
-	 
+
 	var self = this ;
 	var config = {
 			name:getProcessName(),
-			level:'debug',
+			level:'info',
 			host:process.env.WINSTON_AMQP || 'amqp://guest:guest@rabbit-logger:5672/winston/winston',
 			exchangeOptions:{
 				type: 'direct',
@@ -64,7 +65,7 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
 	if (config.host.protocol!=='amqp:')
 		throw new Error("Incorrect protocol "+config.protocol) ;
 	if (!config.exchange)
-		config.exchange = config.host.pathname.split("/")[1] || 'winston';
+		config.exchange = config.host.pathname.split("/")[1] || 'logging.metric';
 	if (!config.routingKey)
 		config.routingKey = config.host.pathname.split("/")[2] ;
 
@@ -76,6 +77,7 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
 	// Configure your storage backing as you see fit
 	var connection = amqp.createConnection({
 		host: config.host.hostname,
+        vhost: config.vhost || '/',
 		port: config.host.port,
 		login: config.host.auth.split(":")[0],
 		password: config.host.auth.split(":")[1]
@@ -85,16 +87,13 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
 		connection.exchange(config.exchange, config.exchangeOptions, function (exchange) {
 			publish = function(logMessage, callback){
 				var message = {
-						logHostName:host(),
-						timestamp:Date.now(),
-						loggerName:"winston",
 						name:self.name
 				};
 				assign(message,logMessage) ;
 
-				exchange.publish(config.routingKey || message.name, 
-						message, 
-						config.publishOptions, 
+				exchange.publish(config.routingKey || message.name,
+						message,
+						config.publishOptions,
 						function(err){
 					callback && callback(err?new Error():null,!err) ;
 				});
@@ -120,6 +119,8 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
 
 util.inherits(AMQP, winston.Transport);
 
+// Log function modified in order to avoid nested objects.
+// All required information will come in the meta object so just publish the meta object instead.
 AMQP.prototype.log = function (level, msg, meta, callback) {
 	// Store this message and metadata, maybe use some custom logic
 	// then callback indicating success.
@@ -127,21 +128,16 @@ AMQP.prototype.log = function (level, msg, meta, callback) {
 		callback = meta;
 		meta = undefined;
 	}
-	
+
 	if (meta && Object.keys(meta).length==0)
 		meta = undefined ;
-	
+
 	if (!publish) {
 		buffer.push({logger:this,args:[level,msg,meta]}) ;
 		callback && callback(null, true);
 	}
 	else {
-		var o = {
-			level:level,
-			message:msg
-		} ;
 		if (meta)
-			o.meta = meta ;
-		publish(o,callback) ;
+		  publish(meta,callback) ;
 	}
 };
