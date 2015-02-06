@@ -12,7 +12,6 @@
     "AMQP",
     "RabbitMQ"
   ],
-  "author": "matthew.woolf@mailonline.co.uk",
   "license": "ISC",
   "dependencies": {
     "amqp": "^0.2.0",
@@ -21,10 +20,10 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/MailOnline/winston-amqp"
+    "url": "https://github.com/pasangsherpa/winston-amqp"
   },
   "bugs": {
-    "url": "https://github.com/MailOnline/winston-amqp/issues"
+    "url": "https://github.com/pasangsherpa/winston-amqp/issues"
   },
-  "homepage": "https://github.com/MailOnline/winston-amqp"
+  "homepage": "https://github.com/pasangsherpa/winston-amqp"
 }

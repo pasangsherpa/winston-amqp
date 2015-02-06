@@ -49,3 +49,7 @@ winston-amqp emits an 'error' event if it cannot connection to the AMQP exchange
 Log Messages
 ------------
 The messages posted to the AMQP server are in JSON format and consist of all log request in the winston 'meta' tag.
+
+## Credits
+
+  - Forked from [winston-amqp](https://github.com/MailOnline/winston-amqp) by [MailOnline](https://github.com/MailOnline)
