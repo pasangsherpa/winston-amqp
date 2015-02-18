@@ -48,13 +48,12 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
             level:'info',
             host:process.env.WINSTON_AMQP || 'amqp://guest:guest@rabbit-logger:5672/winston/winston',
             exchangeOptions:{
-                type: 'direct',
-                durable: true,
-                autoDelete: false
+                type: 'topic',
+                passive: true
             },
             publishOptions:{
                 contentType: 'application/json',
-                deliveryMode: 2     // Non-persistent (1) or persistent (2)
+                deliveryMode: 1     // Non-persistent (1) or persistent (2)
             }
     } ;
 
@@ -65,7 +64,7 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
     if (config.host.protocol!=='amqp:')
         throw new Error("Incorrect protocol "+config.protocol) ;
     if (!config.exchange)
-        config.exchange = config.host.pathname.split("/")[1] || 'logging.metric';
+        config.exchange = config.host.pathname.split("/")[1];
     if (!config.routingKey)
         config.routingKey = config.host.pathname.split("/")[2] ;
 
@@ -79,6 +78,8 @@ var AMQP = module.exports = winston.transports.AMQP = function (options) {
         host: config.host.hostname,
         vhost: config.vhost || '/',
         port: config.host.port,
+        connectionTimeout: config.connectionTimeout || 3000,
+        authMechanism: config.authMechanism || 'PLAIN',
         login: config.host.auth.split(":")[0],
         password: config.host.auth.split(":")[1]
     });
